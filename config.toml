@@ -55,14 +55,14 @@ enableGitInfo = false
 
   # Your details.
   name = "Will Morgan"
-  role = "Research Associate at the Action Lab at ASU, \n Masters Student in Statistics, and \n Data Consultant at 6-4-3 Charts"
+  role = "Research Associate at the Action Lab at ASU, \n Graduate Student, and \n Data Consultant at 6-4-3 Charts"
 
   # Organizations/Affiliations.
   #   Separate multiple entries with a comma, using the form: `[ {name="Org1", url=""}, {name="Org2", url=""} ]`.
   organizations = [ { name = "Action Lab at EdPlus", url = "https://edplus.asu.edu/what-we-do/action-lab" }, {name = "6-4-3 Charts", url = "https://643charts.com/"}]
 
   gravatar = false  # Get your avatar from Gravatar.com? (true/false)
-  avatar = "headshot.jpg"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
+  avatar = "headshot2.jpg"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
   email = "wsmorgan@asu.edu"
 
   # Enable Keybase in Contact widget by entering your keybase.io username.

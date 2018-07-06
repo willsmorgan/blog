@@ -1,0 +1,19 @@
+Personal Website workflow notes
+
+
+GENERAL OUTLINE:
+  - go to C:/users/wsmorgan/git/hugo-website and open "LOCAL hugo.Rproj"
+  - make whatever changes you need to (config.TOML, add new .md or .Rmd docs)
+  - open gitBASH and direct to public/ folder (this is where your website repo lives)
+    - git add -A
+    - git commit -m "commit message"
+    - git push origin master
+
+  - go to willsmorgan.github.io to check changes
+
+MAKING POSTS:
+  - open "LOCAL hugo" R project
+  - go to add-ins --> New Post
+    - fill out box, make sure you choose subdirectory appropriately
+      - subdirectory is going to be which folder to choose from in content/
+  - work on the markdown document, then follow the last two steps of the GENERAL OUTLINE

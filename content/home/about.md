@@ -34,13 +34,12 @@ weight = 5
  
 +++
 
-# Biography
+# Bio
 
-Hi! My name is Will Morgan, and I am currently a research associate for the Action
-Lab at EdPlus, an ASU organization. I spend most of my studying inequity
-in online higher education and student behavior in online courses. On the side,
-I am a consultant for 6-4-3 Charts, an organization that builds spray charts for
-NCAA Baseball and Softball teams.
+My name is Will Morgan and I work for an organzation at ASU called the Action Lab.
+I spend most of my studying inequity in online higher education and student 
+behavior in online courses. On the side I am a consultant for 6-4-3 Charts, an
+organization that builds spray charts for NCAA Baseball and Softball teams.
 
 I am primarily interested in how students' decisions and behaviors affect various
 learning outcomes, but I have also spent a significant amount of time characterizing

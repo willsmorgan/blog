@@ -1,0 +1,98 @@
+---
+title: Parallelizing Random Forests in R
+author: ''
+date: '2018-06-29'
+slug: parallelizing-random-forests-in-r
+categories:
+  - R
+tags:
+  - parallel processing
+  - random forests
+header:
+  caption: ''
+  image: ''
+---
+
+
+
+<p>Recently I’ve been working on a project with the goal of understanding how students choose between course modalities (online or in-person). My goal so far has been to test a handful of models to come up with the most accurate way of predicting the likelihood that a student will take a course online. Hopefully, this best-performing model would offer some interpretability so that I can see which variables offer the most predictive power.</p>
+<p>In working through this problem it has become necessary for me to take advantage of parallel processing so I can actually get results in a reasonable amount of time. <a href="https://cran.r-project.org/web/packages/glmnet/index.html"><code>glmnet</code></a> offers in-house parallel processing, so for penalized regression it has been a breeze. On the other hand, I haven’t found a native implementation in <a href="https://cran.r-project.org/package=randomForest"><code>randomForest</code></a> so I thought it might be a good exercise to create one myself and make a post about it in case there are others that run into the same problem.</p>
+<p>I use several packages to accomplish this task:</p>
+<ul>
+<li><code>doParallel</code>, <code>foreach</code>
+<ul>
+<li>The workhorse behind the parallel processing</li>
+</ul></li>
+<li><code>caret</code>
+<ul>
+<li>Not explicitly called on in this example, but I do use it in my other work to define folds for cross-validation</li>
+</ul></li>
+<li><code>randomForest</code>
+<ul>
+<li>Used for creating the trees</li>
+</ul></li>
+</ul>
+<p>There is only a little more than 50 lines of code in the example, but there is a good amount to dissect. First, it should be noted that the size of the tree must be specified a priori - the main goal is to get an estimate of the out-of-sample error for a particular forest size (i.e. a specific hyperparameter value). The function starts by iterating through each of the K folds of your data. For a given fold, the tree-growing is done in ten separate groups and then combined. In other words, for a random forest with 100 trees, we grow ten forests of ten trees and combine them using <code>randomForest::combine</code> (this decision about ten groups is completely arbitrary, I just assumed that any forest size I was going to test would be divisible by ten). This function is absolutely critical and is the key reason we can use <code>%dopar%</code> here. Once the random forest is put back together, we estimate the out-of-sample error and move on to the next fold. Finally, the results are averaged across all K folds and the function spits out a data frame detailing the number of trees that were grown and the misclassification rate.</p>
+<p>This function isn’t perfect, but it certainly does the trick. It’d be nice to include some other forms of error on top of the misclassification rate and allow for many forest sizes to be tested. For now, I’ll keep this in my back pocket and robustify it in the future.</p>
+<pre class="r"><code>cvRF &lt;- function(X, Y, ntrees, folds, parallel = TRUE) {
+  &#39;
+  Use foreach to parallelize RF tree growth for a specified number of trees and
+  estimate OOB error using cross-validation
+  
+  Args:
+  - X --&gt; matrix of predictors
+  - Y --&gt; vector/factor of responses
+  - ntrees --&gt; numeric value for size of forest
+  - folds ---&gt; vector of integers with length equal to number of rows in X/Y
+  - parallel ---&gt; boolean for using parallel 
+
+  Returns:
+  - df with two columns:
+  - num_trees
+  - misclassification rate
+  &#39;
+  
+  # Initiate cluster
+  if (parallel) {
+    cl &lt;- makeCluster(detectCores() - 2)
+    registerDoParallel(cl)
+  }
+  
+  cat(&quot;Testing RF of size:&quot;, ntrees, &quot;\n&quot;)
+  
+  # Begin CV
+  result &lt;- foreach(j = 1:max(folds), .combine = bind_rows) %do% {
+    
+    cat(&quot;Fold&quot;, j, &quot;of&quot;, max(folds), &quot;\n&quot;)
+    
+    # Grow trees in parallel and combine into one
+    rf &lt;- foreach(ntree = rep(ntrees/10, 10), .combine = combine, .packages = &#39;randomForest&#39;) %dopar% {
+      
+      # Grow indvl tree on the k-1 folds
+      randomForest(
+        x = X[folds != j, ],
+        y = Y[folds != j],
+        ntree = ntree,
+        mtry = sqrt(dim(X)[2])
+      )
+    }
+    
+    # Predict on out-of-sample fold
+    pred &lt;- predict(rf, X[folds == j, ], type = &#39;response&#39;)
+    
+    # Return df of results
+    data.frame(
+      num_trees = ntrees,
+      misclassification = 1 - mean(pred == Y[folds == j]),
+      fold = j
+    )
+  }
+  
+  # Stop cluster
+  if (parallel) {on.exit(stopCluster(cl))}
+  
+  # Average error rate across folds
+  result %&lt;&gt;% group_by(num_trees) %&gt;% summarise_at(vars(misclassification), mean)
+  
+  return(result)
+}</code></pre>
